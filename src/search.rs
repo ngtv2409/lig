@@ -23,7 +23,7 @@ pub struct Line {
     pub line    : String,
     pub lineno  : usize,
 
-    pub matches : Vec<Match>
+    pub matches : HashMap<String, Vec<Match>>
 }
 
 /* An association of filename and matches */
@@ -44,15 +44,17 @@ pub fn match_file<F : BufRead>(reader : F, patterns : &PatternMap) -> Vec<Line> 
         let mut linest : Line = Line {
             line    : line.clone(),
             lineno  : lineno,
-            matches : Vec::<Match>::new()
+            matches : HashMap::<String, Vec<Match>>::new()
         };
         for (patn, re) in patterns {
             for m in re.find_iter(&line) {
-                linest.matches.push(Match {
-                    moffbeg : m.start(),
-                    moffend : m.end(),
-                    patname : patn.clone()
-                });
+                linest.matches.entry(patn.clone())
+                    .or_insert_with(Vec::new)
+                    .push(Match {
+                        moffbeg : m.start(),
+                        moffend : m.end(),
+                        patname : patn.clone()
+                    });
             }
         }
         if linest.matches.len() > 0 {
