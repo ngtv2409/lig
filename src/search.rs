@@ -20,47 +20,42 @@ pub struct Match {
 
 #[derive(Debug)]
 pub struct Line {
-    pub line    : String,
-    pub lineno  : usize,
+    pub filename : String,
+    pub line     : String,
+    pub lineno   : usize,
 
-    pub matches : HashMap<String, Vec<Match>>
+    pub matches  : Vec<Match>
 }
-
-/* An association of filename and matches */
-
-pub struct FileMatch {
-    pub filename : String, pub lines : Vec<Line>
-}
-
 
 /*
-    Promise: Return vector is sorted by lineno
+    Match a file and update the map
 */
-pub fn match_file<F : BufRead>(reader : F, patterns : &PatternMap) -> Vec<Line> {
-    let mut linests : Vec<Line> = Vec::new();
-
+pub fn match_file<'a, F : BufRead>(reader : F, fileident : &str,
+                               map : &'a mut HashMap<String, Vec<Line>>,
+                               patterns : &PatternMap)
+                -> &'a mut HashMap<String, Vec<Line>> {
     for (lineno, line) in reader.lines().enumerate() {
         let line = line.expect("Failed to read line");
-        let mut linest : Line = Line {
-            line    : line.clone(),
-            lineno  : lineno,
-            matches : HashMap::<String, Vec<Match>>::new()
-        };
         for (patn, re) in patterns {
+            let mut linest : Line = Line {
+                filename: fileident.to_string(),
+                line    : line.clone(),
+                lineno  : lineno,
+                matches : Vec::<Match>::new()
+            };
             for m in re.find_iter(&line) {
-                linest.matches.entry(patn.clone())
-                    .or_insert_with(Vec::new)
-                    .push(Match {
+                linest.matches.push(Match {
                         moffbeg : m.start(),
                         moffend : m.end(),
                         patname : patn.clone()
-                    });
+                });
+            }
+            if linest.matches.len() > 0 {
+                map.entry(patn.clone())
+                    .or_insert_with(Vec::new)
+                    .push(linest);
             }
         }
-        if linest.matches.len() > 0 {
-            linests.push(linest);
-        }
     }
-
-    linests
+    map
 }
