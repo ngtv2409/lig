@@ -18,7 +18,12 @@ use clap::Parser;
 struct Cli {
     filenames : Vec<String>,
 
+    #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
+    patterns : Vec<String>,
+
     // Out prefixes
+    #[arg(long="prefix", default_value_t=String::new())]
+    prefix: String,
     #[arg(short='H', long="with-filename")]
     with_filename: bool,
     #[arg(short='n', long="line-number")]
@@ -31,9 +36,7 @@ struct Cli {
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
-    let mut pmap = PatternMap::new();
-    pmap.insert("FunctionDecl".to_string(), Regex::new(r"\bfn\b").unwrap());
-    pmap.insert("VarDecl".to_string(), Regex::new(r"\blet\b").unwrap());
+    let pmap = parse_patterns(&cli.patterns).expect("Failed to parse pattern");
 
     let mut matches = HashMap::<String, Vec<Line>>::new();
 
@@ -50,6 +53,7 @@ fn main() -> io::Result<()> {
     }
 
     let outopts = OutOptions {
+        prefix : cli.prefix,
         show_filename : cli.with_filename,
         show_linenumber : cli.line_number,
         show_colnumber : cli.col_number,
@@ -58,4 +62,18 @@ fn main() -> io::Result<()> {
     print_matches(&matches, &outopts);
 
     Ok(())
+}
+
+
+fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap, String> {
+    let mut map = PatternMap::new();
+    for patr in patsr {
+        if let Some((key, value)) = patr.split_once('=') {
+            let re = Regex::new(value).expect("Failed to parse regex");
+            map.insert(key.to_string(), re);
+        } else {
+            return Err(format!("Invalid pattern '{}', expected KEY=REGEX", patr));
+        }
+    }
+    Ok(map)
 }

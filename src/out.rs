@@ -2,6 +2,8 @@ use crate::search::{Line};
 use std::collections::HashMap;
 
 pub struct OutOptions {
+    pub prefix : String,
+
     pub show_filename : bool,
     pub show_linenumber : bool,
     pub show_colnumber : bool
@@ -9,6 +11,8 @@ pub struct OutOptions {
 impl Default for OutOptions {
     fn default() -> Self {
         Self {
+            prefix : "".to_string(),
+
             show_filename: false,
             show_linenumber: false,
             show_colnumber: false
@@ -21,7 +25,8 @@ pub fn print_matches(pats : &HashMap<String, Vec<Line>>, opts : &OutOptions) {
         println!("{} ({} matches)", pat, lines.len());
         for line in lines {
             for m in &line.matches {
-                println!("    {}{}",
+                println!("{}{}{}",
+                    opts.prefix,
                     format_location(&line.filename, line.lineno, 
                         byte_to_char_offset(&line.line, m.moffbeg), &opts),
                     line.line
