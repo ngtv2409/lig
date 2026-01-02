@@ -28,7 +28,7 @@ struct Cli {
     with_filename: bool,
     #[arg(short='n', long="line-number")]
     line_number: bool,
-    #[arg(short='c', long="col-number")]
+    #[arg(short='N', long="col-number")]
     col_number: bool,
 
 }
