@@ -1,4 +1,4 @@
-use crate::search::{Line};
+use crate::match::{Line};
 use std::collections::HashMap;
 
 pub struct OutOptions {
