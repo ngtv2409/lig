@@ -21,6 +21,10 @@ struct Cli {
     #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
     patterns : Vec<String>,
 
+    // Output control
+    #[arg(short='c', long="count")]
+    count: bool,
+
     // Out prefixes
     #[arg(long="prefix", default_value_t=String::new())]
     prefix: String,
@@ -53,6 +57,7 @@ fn main() -> io::Result<()> {
     }
 
     let outopts = OutOptions {
+        count : cli.count,
         prefix : cli.prefix,
         show_filename : cli.with_filename,
         show_linenumber : cli.line_number,
