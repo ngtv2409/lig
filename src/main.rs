@@ -7,9 +7,8 @@ use out::{OutOptions, print_matches};
 use regex::Regex;
 use colored::control;
 use clap::{Parser, ValueEnum};
+use anyhow::Result;
 
-use std::fs::File;
-use std::io::{self, BufReader};
 use std::collections::HashMap;
 
 
@@ -49,7 +48,7 @@ struct Cli {
 
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // colored cf 
@@ -68,18 +67,14 @@ fn main() -> io::Result<()> {
         ..Default::default()
     };
 
-    let pmap = parse_patterns(&cli.patterns).expect("Failed to parse pattern");
+    let pmap = parse_patterns(&cli.patterns)?;
     let mut matches = HashMap::<String, Vec<Line>>::new();
     for filename in cli.filenames {
-        let file = File::open(&filename)?;
-        let reader = BufReader::new(file);
-        
         match_file(
-            reader,
             &filename,
             &mut matches,
             &pmap,
-        );
+        )?;
     }
 
     print_matches(&matches, &outopts);
@@ -88,14 +83,14 @@ fn main() -> io::Result<()> {
 }
 
 
-fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap, String> {
+fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap> {
     let mut map = PatternMap::new();
     for patr in patsr {
         if let Some((key, value)) = patr.split_once('=') {
-            let re = Regex::new(value).expect("Failed to parse regex");
+            let re = Regex::new(value)?;
             map.insert(key.to_string(), re);
         } else {
-            return Err(format!("Invalid pattern '{}', expected KEY=REGEX", patr));
+            return Err(anyhow::anyhow!(format!("Invalid pattern '{}', expected KEY=REGEX", patr)));
         }
     }
     Ok(map)

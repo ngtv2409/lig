@@ -4,8 +4,10 @@
 
 */
 use regex::Regex;
+use anyhow::Result;
 
-use std::io::BufRead;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::collections::HashMap;
 
 
@@ -32,12 +34,15 @@ pub struct Line {
 /*
     Match a file and update the map
 */
-pub fn match_file<'a, F : BufRead>(reader : F, fileident : &str,
-                               map : &'a mut HashMap<String, Vec<Line>>,
-                               patterns : &PatternMap)
-                -> &'a mut HashMap<String, Vec<Line>> {
+pub fn match_file<'a>(fileident : &str,
+                      map : &'a mut HashMap<String, Vec<Line>>,
+                      patterns : &PatternMap)
+                -> Result<&'a mut HashMap<String, Vec<Line>>> {
+    let file = File::open(fileident)?;
+    let reader = BufReader::new(file);
+        
     for (lineno, line) in reader.lines().enumerate() {
-        let line = line.expect("Failed to read line");
+        let line = line?;
         for (patn, re) in patterns {
             let mut linest : Line = Line {
                 filename: fileident.to_string(),
@@ -59,5 +64,5 @@ pub fn match_file<'a, F : BufRead>(reader : F, fileident : &str,
             }
         }
     }
-    map
+    Ok(map)
 }
