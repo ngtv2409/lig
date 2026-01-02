@@ -4,8 +4,10 @@
 
 */
 use regex::Regex;
+
 use std::io::BufRead;
 use std::collections::HashMap;
+
 
 pub type PatternMap = HashMap<String, Regex>;
 

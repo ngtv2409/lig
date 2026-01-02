@@ -1,17 +1,17 @@
-mod search;
-use search::{PatternMap, Line, match_file};
+mod matcher;
+use matcher::{PatternMap, Line, match_file};
 
 mod out;
 use out::{OutOptions, print_matches};
 
 use regex::Regex;
 use colored::control;
+use clap::{Parser, ValueEnum};
 
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::collections::HashMap;
 
-use clap::{Parser, ValueEnum};
 
 #[derive(ValueEnum, Clone)]
 enum ColorMode {
@@ -52,22 +52,6 @@ struct Cli {
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
-    let pmap = parse_patterns(&cli.patterns).expect("Failed to parse pattern");
-
-    let mut matches = HashMap::<String, Vec<Line>>::new();
-
-    for filename in cli.filenames {
-        let file = File::open(&filename)?;
-        let reader = BufReader::new(file);
-        
-        match_file(
-            reader,
-            &filename,
-            &mut matches,
-            &pmap,
-        );
-    }
-
     // colored cf 
     match cli.color {
         ColorMode::Never => control::set_override(false),
@@ -83,6 +67,21 @@ fn main() -> io::Result<()> {
         show_colnumber : cli.col_number,
         ..Default::default()
     };
+
+    let pmap = parse_patterns(&cli.patterns).expect("Failed to parse pattern");
+    let mut matches = HashMap::<String, Vec<Line>>::new();
+    for filename in cli.filenames {
+        let file = File::open(&filename)?;
+        let reader = BufReader::new(file);
+        
+        match_file(
+            reader,
+            &filename,
+            &mut matches,
+            &pmap,
+        );
+    }
+
     print_matches(&matches, &outopts);
 
     Ok(())
