@@ -5,11 +5,20 @@ mod out;
 use out::{OutOptions, print_matches};
 
 use regex::Regex;
+use colored::control;
+
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::collections::HashMap;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+
+#[derive(ValueEnum, Clone)]
+enum ColorMode {
+    Never,
+    Auto,
+    Always,
+}
 
 #[derive(Parser)]
 #[command(name = "lig")]
@@ -24,6 +33,9 @@ struct Cli {
     // Output control
     #[arg(short='c', long="count")]
     count: bool,
+
+    #[arg(long="color", default_value="never")]
+    color: ColorMode,
 
     // Out prefixes
     #[arg(long="prefix", default_value_t=String::new())]
@@ -54,6 +66,13 @@ fn main() -> io::Result<()> {
             &mut matches,
             &pmap,
         );
+    }
+
+    // colored cf 
+    match cli.color {
+        ColorMode::Never => control::set_override(false),
+        ColorMode::Always => control::set_override(true),
+        ColorMode::Auto => {}
     }
 
     let outopts = OutOptions {
