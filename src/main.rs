@@ -24,28 +24,37 @@ enum ColorMode {
 #[derive(Parser, Debug)]
 #[command(name = "lig")]
 #[command(version = "0.1.0")]
-#[command(about = "", long_about = None)]
+#[command(about = "Lig is a multi-pattern matching tool")]
 pub struct Cli {
+    /// The file names to search (`-` : stdin)
     #[arg(default_values_t=vec![String::from("-")])]
     filenames : Vec<String>,
 
+    /// The named regex patterns Name=Regex.
+    /// Note: Use --pattern multiple times for multiple patterns
     #[arg(long="pattern", action=ArgAction::Append, required=true)]
     patterns : Vec<String>,
 
-    #[arg(short='v', long="invert-match")]
+    /// Invert the sense of matching (non matching)
+    #[arg(short='v', long="invert-match", help_heading="Matching control")]
     invert_match: bool,
-    #[arg(short='i', long="ignore-case")]
+    /// Ignore the case distinctions of patterns and input data.
+    #[arg(short='i', long="ignore-case", help_heading="Matching control")]
     ignore_case: bool,
 
-    #[arg(long="color", default_value="never")]
+    /// Enable colorized output
+    #[arg(long="color", default_value="never", help_heading="Output control")]
     color: ColorMode,
 
     // Out prefixes
-    #[arg(long="prefix", default_value_t=String::new())]
+    /// The prefix of each line of output
+    #[arg(long="prefix", default_value_t=String::new(), help_heading="Output prefix control")]
     prefix: String,
-    #[arg(short='H', long="with-filename")]
+    /// Follow by file name
+    #[arg(short='H', long="with-filename", help_heading="Output prefix control")]
     with_filename: bool,
-    #[arg(short='n', long="line-number")]
+    /// Follow by line number
+    #[arg(short='n', long="line-number", help_heading="Output prefix control")]
     line_number: bool,
 }
 
