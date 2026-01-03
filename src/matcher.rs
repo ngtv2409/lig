@@ -4,6 +4,7 @@
 
 */
 use crate::utils::OrdHashMap;
+use crate::CLI;
 
 use regex::Regex;
 use anyhow::Result;
@@ -11,11 +12,6 @@ use anyhow::Result;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
 
-
-#[derive(Debug)]
-pub struct MatchOptions {
-    pub invert : bool
-}
 
 pub type PatternMap = OrdHashMap<String, Regex>;
 pub type MatchesMap = OrdHashMap<String, Vec<Line>>;
@@ -40,7 +36,7 @@ pub struct Line {
     Match files and return the map
 */
 pub fn match_files(fileidents : &Vec<String>,
-                      patterns : &PatternMap, opts : &MatchOptions)
+                      patterns : &PatternMap)
                 -> Result<MatchesMap> {
     let mut map = MatchesMap::new();
     // populate map with all patterns
@@ -52,9 +48,9 @@ pub fn match_files(fileidents : &Vec<String>,
         if fileident.as_str() != "-" {
             let file = File::open(fileident)?;
             let reader = BufReader::new(file);
-            map = matcher(&fileident, reader, &patterns, map, opts)?;
+            map = matcher(&fileident, reader, &patterns, map)?;
         } else {
-            map = matcher("(standard input)", io::stdin(), &patterns, map, opts)?;
+            map = matcher("(standard input)", io::stdin(), &patterns, map)?;
         }
 
     }
@@ -66,7 +62,7 @@ pub fn match_files(fileidents : &Vec<String>,
 */
 fn matcher<R: Read>(fileident : &str, read : R,
                patterns : &PatternMap,
-               mut map : MatchesMap, opts : &MatchOptions) -> Result<MatchesMap> {
+               mut map : MatchesMap) -> Result<MatchesMap> {
     let reader = BufReader::new(read);
     for (lineno, line) in reader.lines().enumerate() {
         let line = line?;
@@ -85,7 +81,7 @@ fn matcher<R: Read>(fileident : &str, read : R,
             }
             // when invert is true, xor inverses the condition, 
             // so len == 0 (no match)
-            if (linest.matches.len() > 0) ^ opts.invert {
+            if (linest.matches.len() > 0) ^ CLI.invert_match {
                 map.map.get_mut(patn.as_str()).unwrap().push(linest);
             }
         }

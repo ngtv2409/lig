@@ -1,8 +1,8 @@
 mod matcher;
-use matcher::{MatchOptions, PatternMap, match_files};
+use matcher::{PatternMap, match_files};
 
 mod out;
-use out::{OutOptions, print_matches_line};
+use out::{print_matches_line};
 
 mod utils;
 
@@ -10,6 +10,8 @@ use regex::Regex;
 use colored::control;
 use clap::{Parser, ValueEnum, ArgAction};
 use anyhow::Result;
+
+use once_cell::sync::Lazy;
 
 
 #[derive(ValueEnum, Clone, Debug)]
@@ -23,7 +25,7 @@ enum ColorMode {
 #[command(name = "lig")]
 #[command(version = "0.1.0")]
 #[command(about = "", long_about = None)]
-struct Cli {
+pub struct Cli {
     #[arg(default_values_t=vec![String::from("-")])]
     filenames : Vec<String>,
 
@@ -43,40 +45,26 @@ struct Cli {
     with_filename: bool,
     #[arg(short='n', long="line-number")]
     line_number: bool,
-    #[arg(short='N', long="col-number")]
-    col_number: bool,
-
 }
 
-fn main() -> Result<()> {
-    let cli = Cli::parse();
+pub static CLI: Lazy<Cli> = Lazy::new(|| Cli::parse());
 
+fn main() -> Result<()> {
     // colored cf 
-    match cli.color {
+    match CLI.color {
         ColorMode::Never => control::set_override(false),
         ColorMode::Always => control::set_override(true),
         ColorMode::Auto => {}
     }
 
-    let outopts = OutOptions {
-        prefix : cli.prefix,
-        show_filename : cli.with_filename,
-        show_linenumber : cli.line_number,
-        ..Default::default()
-    };
-    let matchopts = MatchOptions {
-        invert : cli.invert_match,
-    };
-
-    let pmap = parse_patterns(&cli.patterns)?;
+    let pmap = parse_patterns(&CLI.patterns)?;
     let matches =
         match_files(
-            &cli.filenames,
+            &CLI.filenames,
             &pmap,
-            &matchopts
         )?;
 
-    print_matches_line(&matches, &outopts);
+    print_matches_line(&matches);
 
     Ok(())
 }

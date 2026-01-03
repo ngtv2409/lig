@@ -8,6 +8,7 @@ regex = "1"
 clap = { version = "4.3", features = ["derive"] }
 colored = "2"
 anyhow = "1.0"
+once_cell = "1.21.3"
 
 [profile.release]
 debug = false
