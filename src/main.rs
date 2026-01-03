@@ -6,7 +6,7 @@ use out::{print_matches_line};
 
 mod utils;
 
-use regex::Regex;
+use regex::{RegexBuilder};
 use colored::control;
 use clap::{Parser, ValueEnum, ArgAction};
 use anyhow::Result;
@@ -34,6 +34,8 @@ pub struct Cli {
 
     #[arg(short='v', long="invert-match")]
     invert_match: bool,
+    #[arg(short='i', long="ignore-case")]
+    ignore_case: bool,
 
     #[arg(long="color", default_value="never")]
     color: ColorMode,
@@ -74,7 +76,7 @@ fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap> {
     let mut map = PatternMap::new();
     for patr in patsr {
         if let Some((key, value)) = patr.split_once('=') {
-            let re = Regex::new(value)?;
+            let re = RegexBuilder::new(value).case_insensitive(CLI.ignore_case).build()?;
             map.insert(key.to_string(), re);
         } else {
             return Err(anyhow::anyhow!(format!("Invalid pattern '{}', expected KEY=REGEX", patr)));
