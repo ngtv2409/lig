@@ -43,7 +43,7 @@ pub struct Cli {
     ignore_case: bool,
 
     /// Enable colorized output
-    #[arg(long="color", default_value="never", help_heading="Output control")]
+    #[arg(long="color", default_value="auto", help_heading="Output control")]
     color: ColorMode,
     /// Do not print anything beside the headers PATNAME (count)
     #[arg(short='c', long="count", help_heading="Output control")]
