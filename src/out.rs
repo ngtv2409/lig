@@ -3,12 +3,12 @@ use crate::CLI;
 
 use colored::{Colorize, Color};
 
-fn format_prefix(filename : &str, lineno : usize) -> String {
+fn format_prefix(filename : &str, lineno : usize, ifn : bool, iln : bool) -> String {
     let mut s = CLI.prefix.clone();
-    if CLI.with_filename {
+    if ifn {
         s.push_str(&format!("{}:", filename).magenta().to_string());
     }
-    if CLI.line_number {
+    if iln {
         s.push_str(&format!("{}:", lineno + 1).cyan().to_string());
     }
     s
@@ -29,7 +29,7 @@ pub fn print_matches_line(pats : &MatchesMap) {
             }
             println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
             for line in lines {
-                println!("{}{}", format_prefix(&line.filename, line.lineno),
+                println!("{}{}", format_prefix(&line.filename, line.lineno, CLI.with_filename, CLI.line_number),
                         highlight_matches(&line.line, &line.matches, Color::Red));
             }
         }
@@ -44,6 +44,29 @@ pub fn print_count(pats : &MatchesMap) {
                 print!("{}", "!".red())
             }
             println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            let mut prev: Option<&str> = None;
+            let mut count = 0;
+
+            for line in lines {
+                let fname = line.filename.as_str();
+
+                match prev {
+                    Some(p) if p == fname => count += 1,
+                    Some(p) => {
+                        println!("{}{}", format_prefix(p, 0, CLI.with_filename, false), count);
+                        count = 1;
+                        prev = Some(fname);
+                    }
+                    None => {
+                        count = 1;
+                        prev = Some(fname);
+                    }
+                }
+            }
+
+            if let Some(p) = prev {
+                println!("{}{}", format_prefix(p, 0, CLI.with_filename, false), count);
+            }
         }
     }
 }
