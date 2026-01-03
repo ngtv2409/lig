@@ -3,15 +3,17 @@
     Search in a file using regex and return Match struct containing metadata
 
 */
+use crate::utils::OrdHashMap;
+
 use regex::Regex;
 use anyhow::Result;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::collections::HashMap;
 
 
-pub type PatternMap = HashMap<String, Regex>;
+pub type PatternMap = OrdHashMap<String, Regex>;
+pub type MatchesMap = OrdHashMap<String, Vec<Line>>;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -33,15 +35,20 @@ pub struct Line {
     Match a file and update the map
 */
 pub fn match_file<'a>(fileident : &str,
-                      map : &'a mut HashMap<String, Vec<Line>>,
+                      map : &'a mut MatchesMap,
                       patterns : &PatternMap)
-                -> Result<&'a mut HashMap<String, Vec<Line>>> {
+                -> Result<&'a mut MatchesMap> {
     let file = File::open(fileident)?;
     let reader = BufReader::new(file);
+
+    // populate map with all patterns
+    for patn in &patterns.ord {
+        map.insert(patn.to_string(), Vec::new());
+    }
         
     for (lineno, line) in reader.lines().enumerate() {
         let line = line?;
-        for (patn, re) in patterns {
+        for (patn, re) in &patterns.map {
             let mut linest : Line = Line {
                 filename: fileident.to_string(),
                 line    : line.clone(),
@@ -55,9 +62,7 @@ pub fn match_file<'a>(fileident : &str,
                 });
             }
             if linest.matches.len() > 0 {
-                map.entry(patn.clone())
-                    .or_insert_with(Vec::new)
-                    .push(linest);
+                map.map.get_mut(patn.as_str()).unwrap().push(linest);
             }
         }
     }

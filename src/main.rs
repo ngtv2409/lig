@@ -1,15 +1,15 @@
 mod matcher;
-use matcher::{PatternMap, Line, match_file};
+use matcher::{PatternMap, MatchesMap, match_file};
 
 mod out;
 use out::{OutOptions, print_matches_line};
+
+mod utils;
 
 use regex::Regex;
 use colored::control;
 use clap::{Parser, ValueEnum};
 use anyhow::Result;
-
-use std::collections::HashMap;
 
 
 #[derive(ValueEnum, Clone)]
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     };
 
     let pmap = parse_patterns(&cli.patterns)?;
-    let mut matches = HashMap::<String, Vec<Line>>::new();
+    let mut matches = MatchesMap::new();
     for filename in cli.filenames {
         match_file(
             &filename,

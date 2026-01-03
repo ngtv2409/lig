@@ -1,5 +1,4 @@
-use crate::matcher::{Line, Match};
-use std::collections::HashMap;
+use crate::matcher::{Match, MatchesMap};
 
 use colored::{Colorize, Color};
 
@@ -38,12 +37,16 @@ impl Default for OutOptions {
 
     Prints the entire line with matches
 */
-pub fn print_matches_line(pats : &HashMap<String, Vec<Line>>, opts : &OutOptions) {
-    for (pat, lines) in pats.iter() {
-        println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
-        for line in lines {
-            println!("{}{}", opts.format_prefix(&line.filename, line.lineno),
-                    highlight_matches(&line.line, &line.matches, Color::Red));
+pub fn print_matches_line(pats : &MatchesMap, opts : &OutOptions) {
+    for pat in &pats.ord {
+        // lines should always exists because OrdMap always insert in pair 
+        // this is just guardrail
+        if let Some(lines) = pats.map.get(pat.as_str()) {
+            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            for line in lines {
+                println!("{}{}", opts.format_prefix(&line.filename, line.lineno),
+                        highlight_matches(&line.line, &line.matches, Color::Red));
+            }
         }
     }
 }
