@@ -47,8 +47,6 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    dbg!(&cli);
-
     // colored cf 
     match cli.color {
         ColorMode::Never => control::set_override(false),
@@ -64,13 +62,11 @@ fn main() -> Result<()> {
     };
 
     let pmap = parse_patterns(&cli.patterns)?;
-    dbg!(&pmap);
     let matches =
         match_files(
             &cli.filenames,
             &pmap,
         )?;
-    dbg!(&matches);
 
     print_matches_line(&matches, &outopts);
 
