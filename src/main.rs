@@ -32,7 +32,7 @@ pub struct Cli {
 
     /// The named regex patterns Name=Regex.
     /// Note: Use --pattern multiple times for multiple patterns
-    #[arg(long="pattern", action=ArgAction::Append, required=true)]
+    #[arg(short='e', long="pattern", action=ArgAction::Append, required=true)]
     patterns : Vec<String>,
 
     /// Invert the sense of matching (non matching)
