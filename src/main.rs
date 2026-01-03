@@ -24,6 +24,7 @@ enum ColorMode {
 #[command(version = "0.1.0")]
 #[command(about = "", long_about = None)]
 struct Cli {
+    #[arg(default_values_t=vec![String::from("-")])]
     filenames : Vec<String>,
 
     #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
