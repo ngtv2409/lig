@@ -35,6 +35,18 @@ pub fn print_matches_line(pats : &MatchesMap) {
         }
     }
 }
+pub fn print_count(pats : &MatchesMap) {
+    for pat in &pats.ord {
+        // lines should always exists because OrdMap always insert in pair 
+        // this is just guardrail
+        if let Some(lines) = pats.map.get(pat.as_str()) {
+            if CLI.invert_match {
+                print!("{}", "!".red())
+            }
+            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+        }
+    }
+}
 
 fn highlight_matches(text: &str, matches: &[Match], color: Color) -> String {
     let mut result = String::new();

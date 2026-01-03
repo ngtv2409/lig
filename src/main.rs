@@ -2,7 +2,7 @@ mod matcher;
 use matcher::{PatternMap, match_files};
 
 mod out;
-use out::{print_matches_line};
+use out::{print_matches_line, print_count};
 
 mod utils;
 
@@ -45,6 +45,9 @@ pub struct Cli {
     /// Enable colorized output
     #[arg(long="color", default_value="never", help_heading="Output control")]
     color: ColorMode,
+    /// Do not print anything beside the headers PATNAME (count)
+    #[arg(short='c', long="count", help_heading="Output control")]
+    count: bool,
 
     // Out prefixes
     /// The prefix of each line of output
@@ -75,7 +78,12 @@ fn main() -> Result<()> {
             &pmap,
         )?;
 
-    print_matches_line(&matches);
+    if CLI.count {
+        print_count(&matches);
+    }
+    else {
+        print_matches_line(&matches);
+    }
 
     Ok(())
 }
