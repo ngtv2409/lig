@@ -1,5 +1,5 @@
 mod matcher;
-use matcher::{PatternMap, match_files};
+use matcher::{MatchOptions, PatternMap, match_files};
 
 mod out;
 use out::{OutOptions, print_matches_line};
@@ -29,6 +29,9 @@ struct Cli {
 
     #[arg(long="pattern", action=ArgAction::Append, required=true)]
     patterns : Vec<String>,
+
+    #[arg(short='v', long="invert-match")]
+    invert_match: bool,
 
     #[arg(long="color", default_value="never")]
     color: ColorMode,
@@ -61,12 +64,16 @@ fn main() -> Result<()> {
         show_linenumber : cli.line_number,
         ..Default::default()
     };
+    let matchopts = MatchOptions {
+        invert : cli.invert_match,
+    };
 
     let pmap = parse_patterns(&cli.patterns)?;
     let matches =
         match_files(
             &cli.filenames,
             &pmap,
+            &matchopts
         )?;
 
     print_matches_line(&matches, &outopts);
