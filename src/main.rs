@@ -1,5 +1,5 @@
 mod matcher;
-use matcher::{PatternMap, MatchesMap, match_file};
+use matcher::{PatternMap, match_files};
 
 mod out;
 use out::{OutOptions, print_matches_line};
@@ -12,14 +12,14 @@ use clap::{Parser, ValueEnum};
 use anyhow::Result;
 
 
-#[derive(ValueEnum, Clone)]
+#[derive(ValueEnum, Clone, Debug)]
 enum ColorMode {
     Never,
     Auto,
     Always,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(name = "lig")]
 #[command(version = "0.1.0")]
 #[command(about = "", long_about = None)]
@@ -47,6 +47,8 @@ struct Cli {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    dbg!(&cli);
+
     // colored cf 
     match cli.color {
         ColorMode::Never => control::set_override(false),
@@ -62,14 +64,13 @@ fn main() -> Result<()> {
     };
 
     let pmap = parse_patterns(&cli.patterns)?;
-    let mut matches = MatchesMap::new();
-    for filename in cli.filenames {
-        match_file(
-            &filename,
-            &mut matches,
+    dbg!(&pmap);
+    let matches =
+        match_files(
+            &cli.filenames,
             &pmap,
         )?;
-    }
+    dbg!(&matches);
 
     print_matches_line(&matches, &outopts);
 

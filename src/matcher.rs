@@ -32,37 +32,39 @@ pub struct Line {
 }
 
 /*
-    Match a file and update the map
+    Match files and return the map
 */
-pub fn match_file<'a>(fileident : &str,
-                      map : &'a mut MatchesMap,
+pub fn match_files(fileidents : &Vec<String>,
                       patterns : &PatternMap)
-                -> Result<&'a mut MatchesMap> {
-    let file = File::open(fileident)?;
-    let reader = BufReader::new(file);
-
+                -> Result<MatchesMap> {
+    let mut map = MatchesMap::new();
     // populate map with all patterns
     for patn in &patterns.ord {
         map.insert(patn.to_string(), Vec::new());
     }
         
-    for (lineno, line) in reader.lines().enumerate() {
-        let line = line?;
-        for (patn, re) in &patterns.map {
-            let mut linest : Line = Line {
-                filename: fileident.to_string(),
-                line    : line.clone(),
-                lineno  : lineno,
-                matches : Vec::<Match>::new()
-            };
-            for m in re.find_iter(&line) {
-                linest.matches.push(Match {
-                        moffbeg : m.start(),
-                        moffend : m.end(),
-                });
-            }
-            if linest.matches.len() > 0 {
-                map.map.get_mut(patn.as_str()).unwrap().push(linest);
+    for fileident in fileidents {
+        let file = File::open(fileident)?;
+        let reader = BufReader::new(file);
+
+        for (lineno, line) in reader.lines().enumerate() {
+            let line = line?;
+            for (patn, re) in &patterns.map {
+                let mut linest : Line = Line {
+                    filename: fileident.to_string(),
+                    line    : line.clone(),
+                    lineno  : lineno,
+                    matches : Vec::<Match>::new()
+                };
+                for m in re.find_iter(&line) {
+                    linest.matches.push(Match {
+                            moffbeg : m.start(),
+                            moffend : m.end(),
+                    });
+                }
+                if linest.matches.len() > 0 {
+                    map.map.get_mut(patn.as_str()).unwrap().push(linest);
+                }
             }
         }
     }
