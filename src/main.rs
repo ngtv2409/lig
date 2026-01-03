@@ -8,7 +8,7 @@ mod utils;
 
 use regex::Regex;
 use colored::control;
-use clap::{Parser, ValueEnum};
+use clap::{Parser, ValueEnum, ArgAction};
 use anyhow::Result;
 
 
@@ -27,7 +27,7 @@ struct Cli {
     #[arg(default_values_t=vec![String::from("-")])]
     filenames : Vec<String>,
 
-    #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
+    #[arg(long="pattern", action=ArgAction::Append, required=true)]
     patterns : Vec<String>,
 
     #[arg(long="color", default_value="never")]
