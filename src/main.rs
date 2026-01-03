@@ -1,38 +1,34 @@
-mod match;
-use match::{PatternMap, Line, match_file};
+mod matcher;
+use matcher::{PatternMap, match_files};
 
 mod out;
-use out::{OutOptions, print_matches};
+use out::{OutOptions, print_matches_line};
+
+mod utils;
 
 use regex::Regex;
 use colored::control;
-use clap::{Parser, ValueEnum};
-
-use std::fs::File;
-use std::io::{self, BufReader};
-use std::collections::HashMap;
+use clap::{Parser, ValueEnum, ArgAction};
+use anyhow::Result;
 
 
-#[derive(ValueEnum, Clone)]
+#[derive(ValueEnum, Clone, Debug)]
 enum ColorMode {
     Never,
     Auto,
     Always,
 }
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 #[command(name = "lig")]
 #[command(version = "0.1.0")]
 #[command(about = "", long_about = None)]
 struct Cli {
+    #[arg(default_values_t=vec![String::from("-")])]
     filenames : Vec<String>,
 
-    #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
+    #[arg(long="pattern", action=ArgAction::Append, required=true)]
     patterns : Vec<String>,
-
-    // Output control
-    #[arg(short='c', long="count")]
-    count: bool,
 
     #[arg(long="color", default_value="never")]
     color: ColorMode,
@@ -49,7 +45,7 @@ struct Cli {
 
 }
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     // colored cf 
@@ -60,42 +56,33 @@ fn main() -> io::Result<()> {
     }
 
     let outopts = OutOptions {
-        count : cli.count,
         prefix : cli.prefix,
         show_filename : cli.with_filename,
         show_linenumber : cli.line_number,
-        show_colnumber : cli.col_number,
         ..Default::default()
     };
 
-    let pmap = parse_patterns(&cli.patterns).expect("Failed to parse pattern");
-    let mut matches = HashMap::<String, Vec<Line>>::new();
-    for filename in cli.filenames {
-        let file = File::open(&filename)?;
-        let reader = BufReader::new(file);
-        
-        match_file(
-            reader,
-            &filename,
-            &mut matches,
+    let pmap = parse_patterns(&cli.patterns)?;
+    let matches =
+        match_files(
+            &cli.filenames,
             &pmap,
-        );
-    }
+        )?;
 
-    print_matches(&matches, &outopts);
+    print_matches_line(&matches, &outopts);
 
     Ok(())
 }
 
 
-fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap, String> {
+fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap> {
     let mut map = PatternMap::new();
     for patr in patsr {
         if let Some((key, value)) = patr.split_once('=') {
-            let re = Regex::new(value).expect("Failed to parse regex");
+            let re = Regex::new(value)?;
             map.insert(key.to_string(), re);
         } else {
-            return Err(format!("Invalid pattern '{}', expected KEY=REGEX", patr));
+            return Err(anyhow::anyhow!(format!("Invalid pattern '{}', expected KEY=REGEX", patr)));
         }
     }
     Ok(map)

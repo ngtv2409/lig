@@ -7,3 +7,7 @@ edition = "2024"
 regex = "1"
 clap = { version = "4.3", features = ["derive"] }
 colored = "2"
+anyhow = "1.0"
+
+[profile.release]
+debug = false
