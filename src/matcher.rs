@@ -18,8 +18,6 @@ pub type PatternMap = HashMap<String, Regex>;
 pub struct Match {
     pub moffbeg  : usize,  // the line start byte offset of match
     pub moffend  : usize,  // the line end byte offset of match (exclusive)
-
-    pub patname  : String  // name of the pattern matched   
 }
 
 #[derive(Debug)]
@@ -54,7 +52,6 @@ pub fn match_file<'a>(fileident : &str,
                 linest.matches.push(Match {
                         moffbeg : m.start(),
                         moffend : m.end(),
-                        patname : patn.clone()
                 });
             }
             if linest.matches.len() > 0 {

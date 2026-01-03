@@ -2,7 +2,7 @@ mod matcher;
 use matcher::{PatternMap, Line, match_file};
 
 mod out;
-use out::{OutOptions, print_matches};
+use out::{OutOptions, print_matches_line};
 
 use regex::Regex;
 use colored::control;
@@ -28,10 +28,6 @@ struct Cli {
 
     #[arg(long="pattern", default_values_t=vec![String::from("*=.*")])]
     patterns : Vec<String>,
-
-    // Output control
-    #[arg(short='c', long="count")]
-    count: bool,
 
     #[arg(long="color", default_value="never")]
     color: ColorMode,
@@ -59,11 +55,9 @@ fn main() -> Result<()> {
     }
 
     let outopts = OutOptions {
-        count : cli.count,
         prefix : cli.prefix,
         show_filename : cli.with_filename,
         show_linenumber : cli.line_number,
-        show_colnumber : cli.col_number,
         ..Default::default()
     };
 
@@ -77,7 +71,7 @@ fn main() -> Result<()> {
         )?;
     }
 
-    print_matches(&matches, &outopts);
+    print_matches_line(&matches, &outopts);
 
     Ok(())
 }
