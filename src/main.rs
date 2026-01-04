@@ -23,7 +23,7 @@ enum ColorMode {
 
 #[derive(Parser, Debug)]
 #[command(name = "lig")]
-#[command(version = "0.1.0")]
+#[command(version = "1.0.0")]
 #[command(about = "Lig is a multi-pattern matching tool")]
 pub struct Cli {
     /// The file names to search (`-` : stdin)

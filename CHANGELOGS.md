@@ -1,18 +1,14 @@
----
-# Prototype
+# Changelogs
 
-The first incomplete versions. They are indexed by date.
+Date format: mm/dd/yyyy
 
-## [3/1/2026]
+## [1.0.0]
+
+Date: 01/04/2025
+
+This is the first release
 
 ### Added
-- Colorized output
-- Stdin support
-- More reliable CLI
-
-## [2/1/2026]
-- Added basic functionalities:
-  - Define regex patterns
-  - Search and populate patterns
-  - Group them and echo structured output
-
+- Regex multipattern matching
+- Many prefix controls
+- Many output types
