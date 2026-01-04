@@ -69,6 +69,10 @@ pub struct Cli {
     /// Follow by line number
     #[arg(short='n', long="line-number", help_heading="Output prefix control")]
     line_number: bool,
+    #[arg(short='C', long="hide-heading")]
+    hide_heading: bool,
+    #[arg(short='P', long="show-pattern")]
+    show_pattern: bool,
 }
 
 pub static CLI: Lazy<Cli> = Lazy::new(|| Cli::parse());

@@ -5,20 +5,50 @@ use colored::{Colorize, Color};
 
 use std::collections::HashSet;
 
-fn format_prefix(filename : &str, lineno : usize, ifn : bool, iln : bool, isep : bool) -> String {
-    let sep = if isep {
+struct PrefixFormatOptions {
+    pub ifn : bool,
+    pub iln : bool,
+    pub ipatn : bool,
+    pub isep : bool,
+}
+impl Default for PrefixFormatOptions {
+    fn default() -> Self {
+        // default to CLI, overwrite when need
+        PrefixFormatOptions {
+            ifn: CLI.with_filename,
+            iln: CLI.line_number,
+            ipatn: CLI.show_pattern,
+            isep: true
+        }
+    }
+}
+fn format_prefix(filename : &str, lineno : usize, patn : &str,
+                o: PrefixFormatOptions) -> String {
+    let sep = if o.isep {
         ":"
     } else {
         ""
     };
     let mut s = CLI.prefix.clone();
-    if ifn {
+    if o.ipatn {
+        s.push_str(&format!("{}{}", patn, sep).yellow().to_string());
+    }
+    if o.ifn {
         s.push_str(&format!("{}{}", filename, sep).magenta().to_string());
     }
-    if iln {
+    if o.iln {
         s.push_str(&format!("{}{}", lineno + 1, sep).cyan().to_string());
     }
     s
+}
+fn print_heading(pat: &str, count: usize) {
+    if !CLI.hide_heading {
+        if CLI.invert_match {
+            print!("{}", "!".red())
+        }
+        println!("{} ({})",
+            format!("{}", pat).yellow().bold(), count);
+    }
 }
 
 /*
@@ -31,12 +61,10 @@ pub fn print_matches_line(pats : &MatchesMap) {
         // lines should always exists because OrdMap always insert in pair 
         // this is just guardrail
         if let Some(lines) = pats.map.get(pat.as_str()) {
-            if CLI.invert_match {
-                print!("{}", "!".red())
-            }
-            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            print_heading(pat, lines.len());
             for line in lines {
-                println!("{}{}", format_prefix(&line.filename, line.lineno, CLI.with_filename, CLI.line_number, true),
+                println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
+                                PrefixFormatOptions{..Default::default()}),
                         highlight_matches(&line.line, &line.matches, Color::Red));
             }
         }
@@ -47,13 +75,11 @@ pub fn print_matches(pats : &MatchesMap) {
         // lines should always exists because OrdMap always insert in pair 
         // this is just guardrail
         if let Some(lines) = pats.map.get(pat.as_str()) {
-            if CLI.invert_match {
-                print!("{}", "!".red())
-            }
-            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            print_heading(pat, lines.len());
             for line in lines {
                 for m in &line.matches {
-                    println!("{}{}", format_prefix(&line.filename, line.lineno, CLI.with_filename, CLI.line_number, true),
+                    println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
+                                PrefixFormatOptions {..Default::default()}),
                             line.line[m.moffbeg..m.moffend].red());
                 }
             }
@@ -78,7 +104,7 @@ pub fn print_count(pats : &MatchesMap) {
                 match prev {
                     Some(p) if p == fname => count += 1,
                     Some(p) => {
-                        println!("{}{}", format_prefix(p, 0, CLI.with_filename, false, true), count);
+                        println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
                         count = 1;
                         prev = Some(fname);
                     }
@@ -90,7 +116,7 @@ pub fn print_count(pats : &MatchesMap) {
             }
 
             if let Some(p) = prev {
-                println!("{}{}", format_prefix(p, 0, CLI.with_filename, false, true), count);
+                println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
             }
         }
     }
@@ -98,15 +124,13 @@ pub fn print_count(pats : &MatchesMap) {
 pub fn print_files_with_matches(matches : &MatchesMap) {
     for pat in &matches.ord {
         if let Some(lines) = matches.map.get(pat.as_str()) {
-            if CLI.invert_match {
-                print!("{}", "!".red())
-            }
-            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            print_heading(pat, lines.len());
             let mut prev_file: Option<&str> = None;
 
             for line in lines {
                 if prev_file != Some(line.filename.as_str()) {
-                    println!("{}", format_prefix(&line.filename, 0, true, false, false));
+                    println!("{}", format_prefix(&line.filename, 0, &(pat.to_owned()+":"),
+                            PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
                 }
                 prev_file = Some(line.filename.as_str());
             }
@@ -116,10 +140,7 @@ pub fn print_files_with_matches(matches : &MatchesMap) {
 pub fn print_files_without_match(matches : &MatchesMap) {
     for pat in &matches.ord {
         if let Some(lines) = matches.map.get(pat.as_str()) {
-            if CLI.invert_match {
-                print!("{}", "!".red())
-            }
-            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            print_heading(pat, lines.len());
 
             let mut seen = HashSet::<String>::new();
             for line in lines {
@@ -128,7 +149,8 @@ pub fn print_files_without_match(matches : &MatchesMap) {
 
             for file in &CLI.filenames {
                 if ! seen.contains(file) {
-                    println!("{}", format_prefix(file, 0, true, false, false));
+                    println!("{}", format_prefix(file, 0, &(pat.to_owned()+":"),
+                            PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
                 }
             }
         }
