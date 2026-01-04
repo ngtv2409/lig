@@ -49,45 +49,56 @@ pub struct Cli {
         help_heading = "Output control"
     )]
     color: ColorMode,
-    /// Do not print anything beside the headers PATNAME (count)
+    /// Suppress normal output. Print the heading (overrides hide-heading)
     #[arg(short = 'c', long = "count", help_heading = "Output control")]
     count: bool,
+    /// Suppress normal output. Print file names with matches
     #[arg(
         short = 'l',
         long = "files-with-matches",
         help_heading = "Output control"
     )]
     files_with_matches: bool,
+    /// Suppress normal output. Print file names without matches
     #[arg(
         short = 'L',
         long = "files-without-match",
         help_heading = "Output control"
     )]
     files_without_match: bool,
-    #[arg(short = 'o', long = "only-matching")]
+    /// Print only the matching parts of the line
+    #[arg(short = 'o', long = "only-matching",
+        help_heading = "Output control"
+    )]
     only_matching: bool,
 
     // Out prefixes
     /// The prefix of each line of output
     #[arg(long="prefix", default_value_t=String::new(), help_heading="Output prefix control")]
     prefix: String,
-    /// Follow by file name
+    /// include file name
     #[arg(
         short = 'H',
         long = "with-filename",
         help_heading = "Output prefix control"
     )]
     with_filename: bool,
-    /// Follow by line number
+    /// include line number
     #[arg(
         short = 'n',
         long = "line-number",
         help_heading = "Output prefix control"
     )]
     line_number: bool,
-    #[arg(short = 'C', long = "hide-heading")]
+    /// hide heading PATN (COUNT)
+    #[arg(short = 'C', long = "hide-heading",
+        help_heading = "Output prefix control"
+    )]
     hide_heading: bool,
-    #[arg(short = 'P', long = "show-pattern")]
+    /// include pattern name
+    #[arg(short = 'P', long = "show-pattern",
+        help_heading = "Output prefix control"
+    )]
     show_pattern: bool,
 }
 
