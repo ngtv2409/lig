@@ -3,18 +3,18 @@
     Search in a file using regex and return Match struct containing metadata
 
 */
-use crate::utils::OrdHashMap;
 use crate::CLI;
 
 use regex::Regex;
 use anyhow::Result;
+use indexmap::IndexMap;
 
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Read};
 
 
-pub type PatternMap = OrdHashMap<String, Regex>;
-pub type MatchesMap = OrdHashMap<String, Vec<Line>>;
+pub type PatternMap = IndexMap<String, Regex>;
+pub type MatchesMap = IndexMap<String, Vec<Line>>;
 
 #[allow(dead_code)]
 #[derive(Debug)]
@@ -39,11 +39,7 @@ pub fn match_files(fileidents : &Vec<String>,
                       patterns : &PatternMap)
                 -> Result<MatchesMap> {
     let mut map = MatchesMap::new();
-    // populate map with all patterns
-    for patn in &patterns.ord {
-        map.insert(patn.to_string(), Vec::new());
-    }
-        
+
     for fileident in fileidents {
         if fileident.as_str() != "-" {
             let file = File::open(fileident)?;
@@ -57,16 +53,13 @@ pub fn match_files(fileidents : &Vec<String>,
     Ok(map)
 }
 
-/* Helper function for matching logic
-    Premise: All entries exist: patterns.keys is subset of matches.keys
-*/
 fn matcher<R: Read>(fileident : &str, read : R,
                patterns : &PatternMap,
                mut map : MatchesMap) -> Result<MatchesMap> {
     let reader = BufReader::new(read);
     for (lineno, line) in reader.lines().enumerate() {
         let line = line?;
-        for (patn, re) in &patterns.map {
+        for (patn, re) in patterns {
             let mut linest : Line = Line {
                 filename: fileident.to_string(),
                 line    : line.clone(),
@@ -82,7 +75,7 @@ fn matcher<R: Read>(fileident : &str, read : R,
             // when invert is true, xor inverses the condition, 
             // so len == 0 (no match)
             if (linest.matches.len() > 0) ^ CLI.invert_match {
-                map.map.get_mut(patn.as_str()).unwrap().push(linest);
+                map.entry(patn.to_string()).or_insert(Vec::new()).push(linest);
             }
         }
     }

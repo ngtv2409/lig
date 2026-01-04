@@ -8,8 +8,6 @@ use out::{
     print_matches
 };
 
-mod utils;
-
 use regex::{RegexBuilder};
 use colored::control;
 use clap::{Parser, ValueEnum, ArgAction};

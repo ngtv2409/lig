@@ -57,101 +57,83 @@ fn print_heading(pat: &str, count: usize) {
     Prints the entire line with matches
 */
 pub fn print_matches_line(pats : &MatchesMap) {
-    for pat in &pats.ord {
-        // lines should always exists because OrdMap always insert in pair 
-        // this is just guardrail
-        if let Some(lines) = pats.map.get(pat.as_str()) {
-            print_heading(pat, lines.len());
-            for line in lines {
-                println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
-                                PrefixFormatOptions{..Default::default()}),
-                        highlight_matches(&line.line, &line.matches, Color::Red));
-            }
+    for (pat, lines) in pats {
+        print_heading(pat, lines.len());
+        for line in lines {
+            println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
+                            PrefixFormatOptions{..Default::default()}),
+                    highlight_matches(&line.line, &line.matches, Color::Red));
         }
     }
 }
 pub fn print_matches(pats : &MatchesMap) {
-    for pat in &pats.ord {
-        // lines should always exists because OrdMap always insert in pair 
-        // this is just guardrail
-        if let Some(lines) = pats.map.get(pat.as_str()) {
-            print_heading(pat, lines.len());
-            for line in lines {
-                for m in &line.matches {
-                    println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
-                                PrefixFormatOptions {..Default::default()}),
-                            line.line[m.moffbeg..m.moffend].red());
-                }
+    for (pat, lines) in pats {
+        print_heading(pat, lines.len());
+        for line in lines {
+            for m in &line.matches {
+                println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
+                            PrefixFormatOptions {..Default::default()}),
+                        line.line[m.moffbeg..m.moffend].red());
             }
         }
     }
 }
 pub fn print_count(pats : &MatchesMap) {
-    for pat in &pats.ord {
-        // lines should always exists because OrdMap always insert in pair 
-        // this is just guardrail
-        if let Some(lines) = pats.map.get(pat.as_str()) {
-            if CLI.invert_match {
-                print!("{}", "!".red())
-            }
-            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
-            let mut prev: Option<&str> = None;
-            let mut count = 0;
+    for (pat, lines) in pats {
+        print_heading(pat, lines.len());
 
-            for line in lines {
-                let fname = line.filename.as_str();
+        let mut prev: Option<&str> = None;
+        let mut count = 0;
 
-                match prev {
-                    Some(p) if p == fname => count += 1,
-                    Some(p) => {
-                        println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
-                        count = 1;
-                        prev = Some(fname);
-                    }
-                    None => {
-                        count = 1;
-                        prev = Some(fname);
-                    }
+        for line in lines {
+            let fname = line.filename.as_str();
+
+            match prev {
+                Some(p) if p == fname => count += 1,
+                Some(p) => {
+                    println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
+                    count = 1;
+                    prev = Some(fname);
+                }
+                None => {
+                    count = 1;
+                    prev = Some(fname);
                 }
             }
+        }
 
-            if let Some(p) = prev {
-                println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
-            }
+        if let Some(p) = prev {
+            println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
         }
     }
 }
 pub fn print_files_with_matches(matches : &MatchesMap) {
-    for pat in &matches.ord {
-        if let Some(lines) = matches.map.get(pat.as_str()) {
-            print_heading(pat, lines.len());
-            let mut prev_file: Option<&str> = None;
+    for (pat, lines) in matches {
+        print_heading(pat, lines.len());
+        let mut prev_file: Option<&str> = None;
 
-            for line in lines {
-                if prev_file != Some(line.filename.as_str()) {
-                    println!("{}", format_prefix(&line.filename, 0, &(pat.to_owned()+":"),
-                            PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
-                }
-                prev_file = Some(line.filename.as_str());
+        for line in lines {
+            if prev_file != Some(line.filename.as_str()) {
+                println!("{}", format_prefix(&line.filename, 0, &(pat.to_owned()+":"),
+                        PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
             }
+            prev_file = Some(line.filename.as_str());
         }
     }
 }
 pub fn print_files_without_match(matches : &MatchesMap) {
-    for pat in &matches.ord {
-        if let Some(lines) = matches.map.get(pat.as_str()) {
-            print_heading(pat, lines.len());
+    for (pat, lines) in matches {
+        print_heading(pat, lines.len());
 
-            let mut seen = HashSet::<String>::new();
-            for line in lines {
-                seen.insert(line.filename.clone());
-            }
+        let mut seen = HashSet::<String>::new();
+        for line in lines {
+            seen.insert(line.filename.clone());
+        }
 
-            for file in &CLI.filenames {
-                if ! seen.contains(file) {
-                    println!("{}", format_prefix(file, 0, &(pat.to_owned()+":"),
-                            PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
-                }
+        for file in &CLI.filenames {
+            if ! seen.contains(file) {
+                println!("{}", format_prefix(file, 0, &(pat.to_owned()+":"),
+                        PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
             }
         }
     }
