@@ -36,6 +36,9 @@ pub struct Line {
 */
 pub fn match_files(fileidents: &Vec<String>, patterns: &PatternMap) -> Result<MatchesMap> {
     let mut map = MatchesMap::new();
+    for pat in patterns.keys() {
+        map.insert(pat.to_string(), Vec::new());
+    }
 
     for fileident in fileidents {
         if fileident.as_str() != "-" {
