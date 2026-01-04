@@ -1,15 +1,15 @@
-use crate::matcher::{Match, MatchesMap};
 use crate::CLI;
+use crate::matcher::{Match, MatchesMap};
 
-use colored::{Colorize, Color};
+use colored::{Color, Colorize};
 
 use std::collections::HashSet;
 
 struct PrefixFormatOptions {
-    pub ifn : bool,
-    pub iln : bool,
-    pub ipatn : bool,
-    pub isep : bool,
+    pub ifn: bool,
+    pub iln: bool,
+    pub ipatn: bool,
+    pub isep: bool,
 }
 impl Default for PrefixFormatOptions {
     fn default() -> Self {
@@ -18,17 +18,12 @@ impl Default for PrefixFormatOptions {
             ifn: CLI.with_filename,
             iln: CLI.line_number,
             ipatn: CLI.show_pattern,
-            isep: true
+            isep: true,
         }
     }
 }
-fn format_prefix(filename : &str, lineno : usize, patn : &str,
-                o: PrefixFormatOptions) -> String {
-    let sep = if o.isep {
-        ":"
-    } else {
-        ""
-    };
+fn format_prefix(filename: &str, lineno: usize, patn: &str, o: PrefixFormatOptions) -> String {
+    let sep = if o.isep { ":" } else { "" };
     let mut s = CLI.prefix.clone();
     if o.ipatn {
         s.push_str(&format!("{}{}", patn, sep).yellow().to_string());
@@ -46,8 +41,7 @@ fn print_heading(pat: &str, count: usize) {
         if CLI.invert_match {
             print!("{}", "!".red())
         }
-        println!("{} ({})",
-            format!("{}", pat).yellow().bold(), count);
+        println!("{} ({})", format!("{}", pat).yellow().bold(), count);
     }
 }
 
@@ -56,29 +50,47 @@ fn print_heading(pat: &str, count: usize) {
 
     Prints the entire line with matches
 */
-pub fn print_matches_line(pats : &MatchesMap) {
+pub fn print_matches_line(pats: &MatchesMap) {
     for (pat, lines) in pats {
         print_heading(pat, lines.len());
         for line in lines {
-            println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
-                            PrefixFormatOptions{..Default::default()}),
-                    highlight_matches(&line.line, &line.matches, Color::Red));
+            println!(
+                "{}{}",
+                format_prefix(
+                    &line.filename,
+                    line.lineno,
+                    pat,
+                    PrefixFormatOptions {
+                        ..Default::default()
+                    }
+                ),
+                highlight_matches(&line.line, &line.matches, Color::Red)
+            );
         }
     }
 }
-pub fn print_matches(pats : &MatchesMap) {
+pub fn print_matches(pats: &MatchesMap) {
     for (pat, lines) in pats {
         print_heading(pat, lines.len());
         for line in lines {
             for m in &line.matches {
-                println!("{}{}", format_prefix(&line.filename, line.lineno, pat,
-                            PrefixFormatOptions {..Default::default()}),
-                        line.line[m.moffbeg..m.moffend].red());
+                println!(
+                    "{}{}",
+                    format_prefix(
+                        &line.filename,
+                        line.lineno,
+                        pat,
+                        PrefixFormatOptions {
+                            ..Default::default()
+                        }
+                    ),
+                    line.line[m.moffbeg..m.moffend].red()
+                );
             }
         }
     }
 }
-pub fn print_count(pats : &MatchesMap) {
+pub fn print_count(pats: &MatchesMap) {
     for (pat, lines) in pats {
         print_heading(pat, lines.len());
 
@@ -91,7 +103,19 @@ pub fn print_count(pats : &MatchesMap) {
             match prev {
                 Some(p) if p == fname => count += 1,
                 Some(p) => {
-                    println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
+                    println!(
+                        "{}{}",
+                        format_prefix(
+                            p,
+                            0,
+                            "",
+                            PrefixFormatOptions {
+                                iln: false,
+                                ..Default::default()
+                            }
+                        ),
+                        count
+                    );
                     count = 1;
                     prev = Some(fname);
                 }
@@ -103,25 +127,49 @@ pub fn print_count(pats : &MatchesMap) {
         }
 
         if let Some(p) = prev {
-            println!("{}{}", format_prefix(p, 0, "", PrefixFormatOptions{iln: false, ..Default::default()}), count);
+            println!(
+                "{}{}",
+                format_prefix(
+                    p,
+                    0,
+                    "",
+                    PrefixFormatOptions {
+                        iln: false,
+                        ..Default::default()
+                    }
+                ),
+                count
+            );
         }
     }
 }
-pub fn print_files_with_matches(matches : &MatchesMap) {
+pub fn print_files_with_matches(matches: &MatchesMap) {
     for (pat, lines) in matches {
         print_heading(pat, lines.len());
         let mut prev_file: Option<&str> = None;
 
         for line in lines {
             if prev_file != Some(line.filename.as_str()) {
-                println!("{}", format_prefix(&line.filename, 0, &(pat.to_owned()+":"),
-                        PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
+                println!(
+                    "{}",
+                    format_prefix(
+                        &line.filename,
+                        0,
+                        &(pat.to_owned() + ":"),
+                        PrefixFormatOptions {
+                            ifn: true,
+                            iln: false,
+                            isep: false,
+                            ..Default::default()
+                        }
+                    )
+                );
             }
             prev_file = Some(line.filename.as_str());
         }
     }
 }
-pub fn print_files_without_match(matches : &MatchesMap) {
+pub fn print_files_without_match(matches: &MatchesMap) {
     for (pat, lines) in matches {
         print_heading(pat, lines.len());
 
@@ -131,14 +179,25 @@ pub fn print_files_without_match(matches : &MatchesMap) {
         }
 
         for file in &CLI.filenames {
-            if ! seen.contains(file) {
-                println!("{}", format_prefix(file, 0, &(pat.to_owned()+":"),
-                        PrefixFormatOptions {ifn:true, iln:false, isep:false,..Default::default()}));
+            if !seen.contains(file) {
+                println!(
+                    "{}",
+                    format_prefix(
+                        file,
+                        0,
+                        &(pat.to_owned() + ":"),
+                        PrefixFormatOptions {
+                            ifn: true,
+                            iln: false,
+                            isep: false,
+                            ..Default::default()
+                        }
+                    )
+                );
             }
         }
     }
 }
-
 
 fn highlight_matches(text: &str, matches: &[Match], color: Color) -> String {
     let mut result = String::new();

@@ -3,18 +3,16 @@ use matcher::{PatternMap, match_files};
 
 mod out;
 use out::{
-    print_matches_line, print_count,
-    print_files_with_matches, print_files_without_match,
-    print_matches
+    print_count, print_files_with_matches, print_files_without_match, print_matches,
+    print_matches_line,
 };
 
-use regex::{RegexBuilder};
-use colored::control;
-use clap::{Parser, ValueEnum, ArgAction};
 use anyhow::Result;
+use clap::{ArgAction, Parser, ValueEnum};
+use colored::control;
+use regex::RegexBuilder;
 
 use once_cell::sync::Lazy;
-
 
 #[derive(ValueEnum, Clone, Debug)]
 enum ColorMode {
@@ -30,31 +28,43 @@ enum ColorMode {
 pub struct Cli {
     /// The file names to search (`-` : stdin)
     #[arg(default_values_t=vec![String::from("-")])]
-    filenames : Vec<String>,
+    filenames: Vec<String>,
 
     /// The named regex patterns Name=Regex.
     /// Note: Use --pattern multiple times for multiple patterns
     #[arg(short='e', long="pattern", action=ArgAction::Append, required=true)]
-    patterns : Vec<String>,
+    patterns: Vec<String>,
 
     /// Invert the sense of matching (non matching)
-    #[arg(short='v', long="invert-match", help_heading="Matching control")]
+    #[arg(short = 'v', long = "invert-match", help_heading = "Matching control")]
     invert_match: bool,
     /// Ignore the case distinctions of patterns and input data.
-    #[arg(short='i', long="ignore-case", help_heading="Matching control")]
+    #[arg(short = 'i', long = "ignore-case", help_heading = "Matching control")]
     ignore_case: bool,
 
     /// Enable colorized output
-    #[arg(long="color", default_value="auto", help_heading="Output control")]
+    #[arg(
+        long = "color",
+        default_value = "auto",
+        help_heading = "Output control"
+    )]
     color: ColorMode,
     /// Do not print anything beside the headers PATNAME (count)
-    #[arg(short='c', long="count", help_heading="Output control")]
+    #[arg(short = 'c', long = "count", help_heading = "Output control")]
     count: bool,
-    #[arg(short='l', long="files-with-matches", help_heading="Output control")]
+    #[arg(
+        short = 'l',
+        long = "files-with-matches",
+        help_heading = "Output control"
+    )]
     files_with_matches: bool,
-    #[arg(short='L', long="files-without-match", help_heading="Output control")]
+    #[arg(
+        short = 'L',
+        long = "files-without-match",
+        help_heading = "Output control"
+    )]
     files_without_match: bool,
-    #[arg(short='o', long="only-matching")]
+    #[arg(short = 'o', long = "only-matching")]
     only_matching: bool,
 
     // Out prefixes
@@ -62,21 +72,29 @@ pub struct Cli {
     #[arg(long="prefix", default_value_t=String::new(), help_heading="Output prefix control")]
     prefix: String,
     /// Follow by file name
-    #[arg(short='H', long="with-filename", help_heading="Output prefix control")]
+    #[arg(
+        short = 'H',
+        long = "with-filename",
+        help_heading = "Output prefix control"
+    )]
     with_filename: bool,
     /// Follow by line number
-    #[arg(short='n', long="line-number", help_heading="Output prefix control")]
+    #[arg(
+        short = 'n',
+        long = "line-number",
+        help_heading = "Output prefix control"
+    )]
     line_number: bool,
-    #[arg(short='C', long="hide-heading")]
+    #[arg(short = 'C', long = "hide-heading")]
     hide_heading: bool,
-    #[arg(short='P', long="show-pattern")]
+    #[arg(short = 'P', long = "show-pattern")]
     show_pattern: bool,
 }
 
 pub static CLI: Lazy<Cli> = Lazy::new(|| Cli::parse());
 
 fn main() -> Result<()> {
-    // colored cf 
+    // colored cf
     match CLI.color {
         ColorMode::Never => control::set_override(false),
         ColorMode::Always => control::set_override(true),
@@ -84,40 +102,36 @@ fn main() -> Result<()> {
     }
 
     let pmap = parse_patterns(&CLI.patterns)?;
-    let matches =
-        match_files(
-            &CLI.filenames,
-            &pmap,
-        )?;
+    let matches = match_files(&CLI.filenames, &pmap)?;
 
     if CLI.count {
         print_count(&matches);
-    }
-    else if CLI.files_with_matches {
+    } else if CLI.files_with_matches {
         print_files_with_matches(&matches);
-    }
-    else if CLI.files_without_match {
+    } else if CLI.files_without_match {
         print_files_without_match(&matches);
-    }
-    else if CLI.only_matching {
+    } else if CLI.only_matching {
         print_matches(&matches);
-    }
-    else {
+    } else {
         print_matches_line(&matches);
     }
 
     Ok(())
 }
 
-
-fn parse_patterns(patsr : &Vec<String>) -> Result<PatternMap> {
+fn parse_patterns(patsr: &Vec<String>) -> Result<PatternMap> {
     let mut map = PatternMap::new();
     for patr in patsr {
         if let Some((key, value)) = patr.split_once('=') {
-            let re = RegexBuilder::new(value).case_insensitive(CLI.ignore_case).build()?;
+            let re = RegexBuilder::new(value)
+                .case_insensitive(CLI.ignore_case)
+                .build()?;
             map.insert(key.to_string(), re);
         } else {
-            return Err(anyhow::anyhow!(format!("Invalid pattern '{}', expected KEY=REGEX", patr)));
+            return Err(anyhow::anyhow!(format!(
+                "Invalid pattern '{}', expected KEY=REGEX",
+                patr
+            )));
         }
     }
     Ok(map)
