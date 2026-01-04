@@ -42,6 +42,24 @@ pub fn print_matches_line(pats : &MatchesMap) {
         }
     }
 }
+pub fn print_matches(pats : &MatchesMap) {
+    for pat in &pats.ord {
+        // lines should always exists because OrdMap always insert in pair 
+        // this is just guardrail
+        if let Some(lines) = pats.map.get(pat.as_str()) {
+            if CLI.invert_match {
+                print!("{}", "!".red())
+            }
+            println!("{} ({})", format!("{}", pat).yellow().bold(), lines.len());
+            for line in lines {
+                for m in &line.matches {
+                    println!("{}{}", format_prefix(&line.filename, line.lineno, CLI.with_filename, CLI.line_number, true),
+                            line.line[m.moffbeg..m.moffend].red());
+                }
+            }
+        }
+    }
+}
 pub fn print_count(pats : &MatchesMap) {
     for pat in &pats.ord {
         // lines should always exists because OrdMap always insert in pair 

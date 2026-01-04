@@ -4,7 +4,8 @@ use matcher::{PatternMap, match_files};
 mod out;
 use out::{
     print_matches_line, print_count,
-    print_files_with_matches, print_files_without_match
+    print_files_with_matches, print_files_without_match,
+    print_matches
 };
 
 mod utils;
@@ -55,6 +56,8 @@ pub struct Cli {
     files_with_matches: bool,
     #[arg(short='L', long="files-without-match", help_heading="Output control")]
     files_without_match: bool,
+    #[arg(short='o', long="only-matching")]
+    only_matching: bool,
 
     // Out prefixes
     /// The prefix of each line of output
@@ -93,6 +96,9 @@ fn main() -> Result<()> {
     }
     else if CLI.files_without_match {
         print_files_without_match(&matches);
+    }
+    else if CLI.only_matching {
+        print_matches(&matches);
     }
     else {
         print_matches_line(&matches);
