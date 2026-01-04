@@ -2,7 +2,10 @@ mod matcher;
 use matcher::{PatternMap, match_files};
 
 mod out;
-use out::{print_matches_line, print_count};
+use out::{
+    print_matches_line, print_count,
+    print_files_with_matches, print_files_without_match
+};
 
 mod utils;
 
@@ -48,6 +51,10 @@ pub struct Cli {
     /// Do not print anything beside the headers PATNAME (count)
     #[arg(short='c', long="count", help_heading="Output control")]
     count: bool,
+    #[arg(short='l', long="files-with-matches", help_heading="Output control")]
+    files_with_matches: bool,
+    #[arg(short='L', long="files-without-match", help_heading="Output control")]
+    files_without_match: bool,
 
     // Out prefixes
     /// The prefix of each line of output
@@ -80,6 +87,12 @@ fn main() -> Result<()> {
 
     if CLI.count {
         print_count(&matches);
+    }
+    else if CLI.files_with_matches {
+        print_files_with_matches(&matches);
+    }
+    else if CLI.files_without_match {
+        print_files_without_match(&matches);
     }
     else {
         print_matches_line(&matches);
